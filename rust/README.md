@@ -21,6 +21,8 @@ The Rust workspace is the current main product surface. The `claw` binary provid
 
 ### Authentication
 
+#### Option 1: Environment Variables
+
 Anthropic-compatible models:
 
 ```bash
@@ -37,7 +39,35 @@ export XAI_API_KEY="..."
 export XAI_BASE_URL="https://api.x.ai"
 ```
 
-OAuth login is also available:
+#### Option 2: Config File (~/.claw/config.json)
+
+Create `~/.claw/config.json` for provider configuration:
+
+**OpenAI-compatible API (Z.AI, OpenRouter, NVIDIA NIM, etc.):**
+
+```json
+{
+  "provider": "openai-compatible",
+  "api_key": "your-api-key-here",
+  "base_url": "https://api.z.ai/api/coding/paas/v4",
+  "model": "glm-5"
+}
+```
+
+**Ollama (Local LLM - No API Key Required):**
+
+```json
+{
+  "provider": "openai-compatible",
+  "api_key": "",
+  "base_url": "http://localhost:11434/v1",
+  "model": "qwen2.5:7b"
+}
+```
+
+**Supported Ollama Models:** `qwen`, `llama`, `gemma`, `mistral`, `exaone`, `granite` and any OpenAI-compatible models.
+
+#### Option 3: OAuth Login
 
 ```bash
 cargo run --bin claw -- login
