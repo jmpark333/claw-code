@@ -1,0 +1,28 @@
+__pycache__/
+archive/
+.omx/
+.clawd-agents/
+
+# Claude Code local artifacts
+.claude/settings.local.json
+.claude/sessions/
+
+# Rust build artifacts
+target/
+Cargo.lock
+**/*.rs.bk
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+*.log
