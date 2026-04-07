@@ -127,6 +127,11 @@ impl OpenAiCompatClient {
         if let Some(api_key) = api_key_from_config() {
             return Ok(Self::new(api_key, config));
         }
+        // For providers like Ollama that don't require authentication,
+        // allow proceeding with empty api_key if base_url is configured in config.json
+        if base_url_from_config().is_some() {
+            return Ok(Self::new("", config));
+        }
         Err(ApiError::missing_credentials(
             config.provider_name,
             config.credential_env_vars(),
@@ -223,10 +228,15 @@ impl OpenAiCompatClient {
         request: &MessageRequest,
     ) -> Result<reqwest::Response, ApiError> {
         let request_url = chat_completions_endpoint(&self.base_url);
-        self.http
+        let mut builder = self
+            .http
             .post(&request_url)
-            .header("content-type", "application/json")
-            .bearer_auth(&self.api_key)
+            .header("content-type", "application/json");
+        // Only add Bearer auth if api_key is not empty (for providers like Ollama that don't require auth)
+        if !self.api_key.is_empty() {
+            builder = builder.bearer_auth(&self.api_key);
+        }
+        builder
             .json(&build_chat_completion_request(request))
             .send()
             .await

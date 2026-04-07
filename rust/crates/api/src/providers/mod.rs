@@ -190,6 +190,15 @@ pub fn metadata_for_model(model: &str) -> Option<ProviderMetadata> {
             default_base_url: openai_compat::DEFAULT_OPENAI_BASE_URL,
         });
     }
+    // qwen models use OpenAI-compatible API (Ollama, etc.)
+    if lower.starts_with("qwen") {
+        return Some(ProviderMetadata {
+            provider: ProviderKind::OpenAi,
+            auth_env: "OPENAI_API_KEY",
+            base_url_env: "OPENAI_BASE_URL",
+            default_base_url: openai_compat::DEFAULT_OPENAI_BASE_URL,
+        });
+    }
     None
 }
 
