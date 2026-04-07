@@ -1,60 +1,35 @@
-# Claw Code
+# Claw Code - Ollama/OpenAI 호환 API 버전
 
-Claw Code is a local coding-agent CLI implemented in safe Rust. It is **Claude Code inspired** and developed as a **clean-room implementation**: it aims for a strong local agent experience, but it is **not** a direct port or copy of Claude Code.
+Claw Code의 Ollama 및 OpenAI 호환 API 지원 버전입니다. 로컬 LLM(Ollama)과 다양한 OpenAI 호환 API 제공자를 사용할 수 있습니다.
 
-The Rust workspace is the current main product surface. The `claw` binary provides interactive sessions, one-shot prompts, workspace-aware tools, local agent workflows, and plugin-capable operation from a single workspace.
+## 설치
 
-## Current status
-
-- **Version:** `0.1.0`
-- **Release stage:** initial public release, source-build distribution
-- **Primary implementation:** Rust workspace in this repository
-- **Platform focus:** macOS and Linux developer workstations
-
-## Install, build, and run
-
-### Prerequisites
+### 사전 요구사항
 
 - Rust stable toolchain
 - Cargo
-- Provider credentials for the model you want to use
+- Ollama (로컬 LLM 사용 시)
 
-### Authentication
-
-#### Option 1: Environment Variables
-
-Anthropic-compatible models:
+### 빌드
 
 ```bash
-export ANTHROPIC_API_KEY="..."
-# Optional when using a compatible endpoint
-export ANTHROPIC_BASE_URL="https://api.anthropic.com"
+cd rust
+cargo build --release
 ```
 
-Grok models:
+### 설치
 
 ```bash
-export XAI_API_KEY="..."
-# Optional when using a compatible endpoint
-export XAI_BASE_URL="https://api.x.ai"
+cargo install --path .
 ```
 
-#### Option 2: Config File (~/.claw/config.json)
+## API 설정
 
-Create `~/.claw/config.json` for provider configuration:
+### 방법 1: config.json 파일 (권장)
 
-**OpenAI-compatible API (Z.AI, OpenRouter, NVIDIA NIM, etc.):**
+`~/.claw/config.json` 파일을 생성합니다:
 
-```json
-{
-  "provider": "openai-compatible",
-  "api_key": "your-api-key-here",
-  "base_url": "https://api.z.ai/api/coding/paas/v4",
-  "model": "glm-5"
-}
-```
-
-**Ollama (Local LLM - No API Key Required):**
+**Ollama (로컬 LLM - API 키 불필요):**
 
 ```json
 {
@@ -65,88 +40,110 @@ Create `~/.claw/config.json` for provider configuration:
 }
 ```
 
-**Supported Ollama Models:** `qwen`, `llama`, `gemma`, `mistral`, `exaone`, `granite` and any OpenAI-compatible models.
+**OpenAI 호환 API (Z.AI, OpenRouter, NVIDIA NIM 등):**
 
-#### Option 3: OAuth Login
-
-```bash
-cargo run --bin claw -- login
+```json
+{
+  "provider": "openai-compatible",
+  "api_key": "your-api-key",
+  "base_url": "https://api.z.ai/api/coding/paas/v4",
+  "model": "glm-5"
+}
 ```
 
-### Install locally
+### 방법 2: 환경 변수
 
 ```bash
-cargo install --path crates/claw-cli --locked
+export ANTHROPIC_API_KEY="sk-ant-..."
+export XAI_API_KEY="xai-..."
 ```
 
-### Build from source
+## 지원 모델
+
+### Ollama 로컬 모델
+- `qwen` 시리즈 (qwen2.5:7b, qwen3.5:2b 등)
+- `llama` 시리즈 (llama3.2 등)
+- `gemma` 시리즈
+- `mistral` 시리즈
+- `exaone` 시리즈
+- `granite` 시리즈
+
+### 클라우드 API
+- Z.AI (glm-5, glm-4.7-flash)
+- OpenRouter
+- NVIDIA NIM API
+- 기타 OpenAI 호환 API
+
+## 사용법
+
+### 대화형 모드
 
 ```bash
-cargo build --release -p claw-cli
+claw
 ```
 
-### Run
-
-From the workspace:
+### 단발성 프롬프트
 
 ```bash
-cargo run --bin claw -- --help
-cargo run --bin claw --
-cargo run --bin claw -- prompt "summarize this workspace"
-cargo run --bin claw -- --model sonnet "review the latest changes"
+claw prompt "이 저장소를 요약해줘"
 ```
 
-From the release build:
+### 모델 지정
 
 ```bash
-./target/release/claw
-./target/release/claw prompt "explain crates/runtime"
+claw --model qwen2.5:7b "파이썬 코드 작성해줘"
+claw -m glm-5 "코드 리뷰해줘"
 ```
 
-## Supported capabilities
+### 슬래시 명령어
 
-- Interactive REPL and one-shot prompt execution
-- Saved-session inspection and resume flows
-- Built-in workspace tools for shell, file read/write/edit, search, web fetch/search, todos, and notebook updates
-- Slash commands for status, compaction, config inspection, diff, export, session management, and version reporting
-- Local agent and skill discovery with `claw agents` and `claw skills`
-- Plugin discovery and management through the CLI and slash-command surfaces
-- OAuth login/logout plus model/provider selection from the command line
-- Workspace-aware instruction/config loading (`CLAW.md`, config files, permissions, plugin settings)
+| 명령어 | 설명 |
+|--------|------|
+| `/help` | 도움말 표시 |
+| `/status` | 현재 상태 확인 |
+| `/compact` | 대화 기록 압축 |
+| `/config` | 설정 확인 |
 
-## Current limitations
+## Ollama 설정
 
-- Public distribution is **source-build only** today; this workspace is not set up for crates.io publishing
-- GitHub CI verifies `cargo check`, `cargo test`, and release builds, but automated release packaging is not yet present
-- Current CI targets Ubuntu and macOS; Windows release readiness is still to be established
-- Some live-provider integration coverage is opt-in because it requires external credentials and network access
-- The command surface may continue to evolve during the `0.x` series
+### Ollama 설치
 
-## Implementation
+```bash
+# macOS/Linux
+curl -fsSL https://ollama.com/install.sh | sh
 
-The Rust workspace is the active product implementation. It currently includes these crates:
+# 모델 다운로드
+ollama pull qwen2.5:7b
+ollama pull llama3.2
+```
 
-- `claw-cli` — user-facing binary
-- `api` — provider clients and streaming
-- `runtime` — sessions, config, permissions, prompts, and runtime loop
-- `tools` — built-in tool implementations
-- `commands` — slash-command registry and handlers
-- `plugins` — plugin discovery, registry, and lifecycle support
-- `lsp` — language-server protocol support types and process helpers
-- `server` and `compat-harness` — supporting services and compatibility tooling
+### Ollama 실행 확인
 
-## Roadmap
+```bash
+ollama list
+ollama run qwen2.5:7b
+```
 
-- Publish packaged release artifacts for public installs
-- Add a repeatable release workflow and longer-lived changelog discipline
-- Expand platform verification beyond the current CI matrix
-- Add more task-focused examples and operator documentation
-- Continue tightening feature coverage and UX polish across the Rust implementation
+## 구현 내용
 
-## Release notes
+이 버전에서 추가된 기능:
 
-- Draft 0.1.0 release notes: [`docs/releases/0.1.0.md`](docs/releases/0.1.0.md)
+1. **OpenAI 호환 API 지원** - Ollama, Z.AI, OpenRouter 등 연동
+2. **config.json 설정** - 환경 변수 없이 파일로 API 설정
+3. **Bearer 인증 선택적 적용** - Ollama처럼 API 키가 필요 없는 provider 지원
+4. **다양한 로컬 모델 지원** - exaone, llama, gemma, mistral, granite 등
 
-## License
+## 제한사항
 
-See the repository root for licensing details.
+- Windows 지원이 미흡할 수 있음
+- 일부 모델은 function calling(도구 사용)을 지원하지 않음
+- 초기 버전(0.1.0)으로 API가 변경될 수 있음
+
+## 참고
+
+- 원본 저장소: https://github.com/ultraworkers/claw-code
+- 이 fork: https://github.com/jmpark333/claw-code
+
+## 라이선스
+
+MIT License
